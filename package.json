@@ -1,0 +1,26 @@
+{
+  "name": "elara-vance-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Award-style portfolio for a fictional product & interaction designer — Next.js App Router.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "14.2.35",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "resend": "^6.17.2"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.11",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "eslint": "8.57.0",
+    "eslint-config-next": "14.2.35",
+    "typescript": "5.5.4"
+  }
+}
