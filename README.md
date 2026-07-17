@@ -1,6 +1,12 @@
 # Elara Vance — Portfolio
 
+[![CI](https://github.com/sbicpcl/elara-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/sbicpcl/elara-portfolio/actions/workflows/ci.yml)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=nextdotjs)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
 An award-style portfolio for a fictional product & interaction designer, built with the modern React stack.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/sbicpcl/elara-portfolio&project-name=elara-portfolio&repository-name=elara-portfolio)
 
 > The original reference repo (`ai-skin-specialist`) is a Python/Gradio app, so there is no JS
 > stack to mirror literally. This is the idiomatic modern equivalent for a marketing site:
