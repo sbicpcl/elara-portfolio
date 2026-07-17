@@ -14,31 +14,39 @@ const MOON = <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" />;
 export default function Nav() {
   const [open, setOpen] = useState(false);
   const [light, setLight] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     setLight(document.documentElement.getAttribute("data-theme") === "light");
+    const onScroll = () => setScrolled(window.scrollY > 30);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const toggleTheme = () => {
     const next = light ? "dark" : "light";
     document.documentElement.setAttribute("data-theme", next);
-    try { localStorage.setItem("theme", next); } catch { /* ignore */ }
+    try {
+      localStorage.setItem("theme", next);
+    } catch {
+      /* ignore */
+    }
     setLight(!light);
   };
 
   const close = () => setOpen(false);
 
   return (
-    <nav id="nav" className={open ? "menu-open" : ""}>
+    <nav id="nav" className={`${open ? "menu-open" : ""}${scrolled ? " scrolled" : ""}`}>
       <Link href="/#top" className="logo" onClick={close}>
-        <span className="mark" /> Elara Vance
+        <span className="mark" aria-hidden="true" /> Lumi
       </Link>
 
       <div className={`nav-links${open ? " open" : ""}`}>
-        <Link href="/#work" onClick={close}>Work</Link>
+        <Link href="/#how" onClick={close}>How it works</Link>
+        <Link href="/#ingredients" onClick={close}>Ingredients</Link>
         <Link href="/#about" onClick={close}>About</Link>
-        <Link href="/#services" onClick={close}>Services</Link>
-        <Link href="/#contact" onClick={close}>Contact</Link>
       </div>
 
       <div className="nav-right">
@@ -47,14 +55,18 @@ export default function Nav() {
             {light ? MOON : SUN}
           </svg>
         </button>
-        <Link href="/#contact" className="cta-btn desk">Let&rsquo;s talk</Link>
+        <Link href="/#analyze" className="cta-btn desk" onClick={close}>
+          Analyze my skin
+        </Link>
         <button
           className="burger"
           onClick={() => setOpen((v) => !v)}
           aria-label="Toggle menu"
           aria-expanded={open}
         >
-          <span /><span /><span />
+          <span />
+          <span />
+          <span />
         </button>
       </div>
     </nav>

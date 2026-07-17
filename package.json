@@ -1,8 +1,8 @@
 {
-  "name": "elara-vance-portfolio",
+  "name": "lumi-skin-specialist",
   "version": "1.0.0",
   "private": true,
-  "description": "Award-style portfolio for a fictional product & interaction designer — Next.js App Router.",
+  "description": "Lumi — an AI skin care specialist. Upload a photo, get personalized skincare guidance. Next.js App Router + Claude vision.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,10 +10,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.112.3",
     "next": "14.2.35",
     "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "resend": "^6.17.2"
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
     "@types/node": "20.14.11",
