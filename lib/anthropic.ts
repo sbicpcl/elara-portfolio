@@ -4,7 +4,9 @@ export const MODEL = "claude-opus-4-8";
 
 /** Returns an Anthropic client, or null when no API key is configured (demo mode). */
 export function getClient(): Anthropic | null {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  // Strip a stray BOM (U+FEFF) or surrounding whitespace that some env-var tooling
+  // prepends — otherwise the SDK fails building the x-api-key header (ByteString error).
+  const apiKey = process.env.ANTHROPIC_API_KEY?.replace(/^﻿/, "").trim();
   if (!apiKey) return null;
   return new Anthropic({ apiKey });
 }
