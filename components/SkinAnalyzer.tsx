@@ -32,6 +32,16 @@ function downscale(file: File, max = 1024, quality = 0.85): Promise<string> {
   });
 }
 
+/** Read a file as a base64 data URL (used for PDFs, which aren't downscaled). */
+function readDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(new Error("Could not read that file."));
+    r.readAsDataURL(file);
+  });
+}
+
 const SEVERITY_LABEL: Record<Severity, string> = {
   low: "Low",
   moderate: "Moderate",
@@ -41,6 +51,8 @@ const SEVERITY_LABEL: Record<Severity, string> = {
 export default function SkinAnalyzer() {
   const [stage, setStage] = useState<Stage>("upload");
   const [preview, setPreview] = useState<string>("");
+  const [fileKind, setFileKind] = useState<"image" | "pdf" | null>(null);
+  const [fileName, setFileName] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -56,16 +68,31 @@ export default function SkinAnalyzer() {
 
   async function handleFile(file: File | undefined) {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("Please choose an image file.");
+    const isImage = file.type.startsWith("image/");
+    const isPdf = file.type === "application/pdf";
+    if (!isImage && !isPdf) {
+      setError("Please choose an image or a PDF.");
+      return;
+    }
+    if (isPdf && file.size > 10 * 1024 * 1024) {
+      setError("That PDF is a little large — please use one under 10 MB.");
       return;
     }
     setError("");
     try {
-      const dataUrl = await downscale(file);
-      setPreview(dataUrl);
+      if (isPdf) {
+        const dataUrl = await readDataUrl(file); // PDFs sent as-is (no downscale)
+        setPreview(dataUrl);
+        setFileKind("pdf");
+        setFileName(file.name);
+      } else {
+        const dataUrl = await downscale(file);
+        setPreview(dataUrl);
+        setFileKind("image");
+        setFileName(file.name);
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not read that image.");
+      setError(e instanceof Error ? e.message : "Could not read that file.");
     }
   }
 
@@ -94,6 +121,8 @@ export default function SkinAnalyzer() {
   function reset() {
     setStage("upload");
     setPreview("");
+    setFileKind(null);
+    setFileName("");
     setNotes("");
     setAnalysis(null);
     setChat([]);
@@ -148,9 +177,14 @@ export default function SkinAnalyzer() {
               handleFile(e.dataTransfer.files?.[0]);
             }}
           >
-            {preview ? (
+            {preview && fileKind === "image" ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={preview} alt="Your uploaded skin photo" className="preview" />
+              <img src={preview} alt="Your uploaded photo" className="preview" />
+            ) : preview && fileKind === "pdf" ? (
+              <div className="pdf-preview">
+                <div className="pdf-ico" aria-hidden="true">PDF</div>
+                <span className="pdf-name">{fileName}</span>
+              </div>
             ) : (
               <div className="dz-inner">
                 <div className="dz-icon" aria-hidden="true">
@@ -160,15 +194,14 @@ export default function SkinAnalyzer() {
                     <path d="M21 17l-5-5-4 4-2-2-4 4" />
                   </svg>
                 </div>
-                <p className="dz-title">Upload or take a photo of your skin</p>
-                <p className="dz-sub">Drag &amp; drop, or tap to choose. A clear, well-lit selfie works best.</p>
+                <p className="dz-title">Upload a photo or a PDF</p>
+                <p className="dz-sub">Drag &amp; drop, or tap to choose. A clear photo or a PDF document both work.</p>
               </div>
             )}
             <input
               ref={fileRef}
               type="file"
-              accept="image/*"
-              capture="user"
+              accept="image/*,application/pdf"
               className="dz-input"
               onChange={(e) => handleFile(e.target.files?.[0])}
             />
@@ -205,11 +238,18 @@ export default function SkinAnalyzer() {
       {stage === "analyzing" && (
         <div className="analyzing" role="status">
           <div className="scan">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview} alt="Analyzing" />
+            {fileKind === "pdf" ? (
+              <div className="pdf-preview scan-doc">
+                <div className="pdf-ico" aria-hidden="true">PDF</div>
+                <span className="pdf-name">{fileName}</span>
+              </div>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={preview} alt="Analyzing" />
+            )}
             <div className="scan-line" />
           </div>
-          <p>Reading your skin…</p>
+          <p>Reading your {fileKind === "pdf" ? "document" : "skin"}…</p>
         </div>
       )}
 
@@ -224,8 +264,12 @@ export default function SkinAnalyzer() {
 
           <div className="result-head">
             <div className="result-thumb">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={preview} alt="Your skin" />
+              {fileKind === "pdf" ? (
+                <div className="pdf-ico small" aria-hidden="true">PDF</div>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={preview} alt="Your upload" />
+              )}
             </div>
             <div>
               <span className="eyebrow">Skin type</span>

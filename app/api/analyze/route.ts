@@ -12,9 +12,10 @@ import {
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const DATA_URL_RE = /^data:(image\/(?:png|jpe?g|webp|gif));base64,([A-Za-z0-9+/=]+)$/;
-// ~6MB of base64 ≈ ~4.5MB image; comfortably under Anthropic's per-image limit.
-const MAX_BASE64 = 6_000_000;
+const DATA_URL_RE =
+  /^data:(image\/(?:png|jpe?g|webp|gif)|application\/pdf);base64,([A-Za-z0-9+/=]+)$/;
+// ~14MB of base64 ≈ ~10MB file; covers multi-page PDFs, under Anthropic's request limit.
+const MAX_BASE64 = 14_000_000;
 
 export async function POST(req: Request) {
   let body: { image?: string; notes?: string };
@@ -30,14 +31,15 @@ export async function POST(req: Request) {
   const match = image.match(DATA_URL_RE);
   if (!match) {
     return NextResponse.json(
-      { ok: false, error: "Please upload a valid image (JPEG, PNG, or WebP)." },
+      { ok: false, error: "Please upload a valid image (JPEG, PNG, WebP) or a PDF." },
       { status: 400 },
     );
   }
   const [, mediaType, data] = match;
+  const isPdf = mediaType === "application/pdf";
   if (data.length > MAX_BASE64) {
     return NextResponse.json(
-      { ok: false, error: "That image is too large — try a smaller photo." },
+      { ok: false, error: "That file is too large — try a smaller photo or PDF." },
       { status: 413 },
     );
   }
@@ -64,7 +66,10 @@ export async function POST(req: Request) {
         {
           role: "user",
           content: [
-            { type: "image", source: { type: "base64", media_type: mediaType, data } },
+            // PDF → document block; image → image block. Document/image goes before the text.
+            isPdf
+              ? { type: "document", source: { type: "base64", media_type: "application/pdf", data } }
+              : { type: "image", source: { type: "base64", media_type: mediaType, data } },
             { type: "text", text: analysisUserText(notes) },
           ],
         },
